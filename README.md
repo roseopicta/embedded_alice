@@ -4,6 +4,7 @@ This project is a pure-C, "embedded friendly", implementation of the DSP chain o
 
 This C implementation has been used for early proof-of-concept prototypes (running on the PS of an RFSoC board), and served as a reference implementation for the VHDL port.
 
+Features:
 * Fixed point or floating point arithmetic (floating point is needed to initialize LUTs)
 * Fast (about 3x the speed of the corresponding GR flowgraph, 10x the speed of the Python implementation)
 * No dependencies
@@ -13,11 +14,11 @@ This C implementation has been used for early proof-of-concept prototypes (runni
 ## DSP library
 
 * Include the ```dsp``` routines in your project (eg: in Vitis).
-* The source code of the command-line tool can serve as an example of how to initialize and chain the different blocks; though on an embedded platform you will be more likely to adopt a streaming model.
+* The source code of the command-line tool can serve as an example of how to initialize and chain the different blocks; though on an embedded platform you will be more likely to adopt a streaming model!
 
 ## Command-line tool and tests
 
-A small command line wrapper in C++, that can be run on MacOS or Linux is provided, along with unit-tests.
+A small command-line wrapper in C++, that can be run on MacOS or Linux is provided, along with unit tests.
 
 ### Requirements
 
