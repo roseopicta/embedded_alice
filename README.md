@@ -1,6 +1,6 @@
-# An embedded transmitter compatible with QOSST
+# An embedded CV-QKD transmitter compatible with QOSST
 
-This project is a pure-C, "embedded friendly", implementation of the DSP chain of a CV-QKD transmitter compatible with [QOSST](https://github.com/qosst/qosst-alice/blob/main/qosst_alice/dsp.py). The signals follow the same format as the original Python implementation of QOSST-Alice, and can be demodulated by QOSST-Bob.
+This project is a pure-C, "embedded friendly", implementation of the DSP chain of a CV-QKD transmitter compatible with [QOSST](https://github.com/qosst/qosst-alice). The signals follow the same format as the original Python implementation of QOSST-Alice, and can be demodulated by QOSST-Bob.
 
 This C implementation has been used for early proof-of-concept prototypes (running on the PS of an RFSoC board), and served as a reference implementation for the VHDL port.
 
