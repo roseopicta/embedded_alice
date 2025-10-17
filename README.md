@@ -43,3 +43,6 @@ ctest
 ./embedded_alice --output_symbols=out_symbols.tsv --output=out_iq.bin --pilot_1_amplitude=0 --pilot_2_amplitude=0 --shift_frequency=0
 python ../tools/plot_signal.py
 ```
+
+![Waveform plot of the ZC sequence and some symbols](resources/output.png)
+
