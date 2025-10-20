@@ -10,6 +10,7 @@
 
 extern "C" {
 #include "dsp/dsp_rng.h"
+#include "dsp/dsp_rrc_filter.h"
 #include "dsp/dsp_zc_generator.h"
 }
 
@@ -20,10 +21,19 @@ extern "C" {
 
 using namespace std;
 
-const vector<iq_sample_t> kReferenceValues = {
+const vector<iq_sample_t> kReferenceValuesRNG = {
     {260, -6977}, {-3742, 648},    {12147, -7094}, {3974, -5621},
     {-99, -8625}, {-10329, -2099}, {-4427, -2524}, {15953, 665},
     {5426, 2814}, {5462, 5788}};
+
+const vector<iq_sample_t> kReferenceValuesRRC = {
+    {0, 0},        {0, 0},        {0, 130},      {0, 27},      {0, -166},
+    {0, 180},      {65, -27},     {13, -501},    {-83, 681},   {90, 857},
+    {-79, -2326},  {-265, -1136}, {423, 9317},   {338, 16383}, {-1150, 9317},
+    {-318, -1136}, {4318, -2326}, {7763, 857},   {5821, 681},  {0, -501},
+    {-5822, -27},  {-7764, 180},  {-4318, -166}, {317, 27},    {1149, 0},
+    {-339, 0},     {-424, 0},     {264, 0},      {13, 0},      {-90, 0},
+    {82, 0},       {-14, 0}};
 
 vector<iq_sample_t> LoadTestData(const string& filename) {
     vector<iq_sample_t> data;
@@ -39,6 +49,17 @@ vector<iq_sample_t> LoadTestData(const string& filename) {
     return data;
 }
 
+void CheckArray(const vector<iq_sample_t>& a, const vector<iq_sample_t>& b,
+                sample_t tolerance) {
+    EXPECT_EQ(a.size(), b.size()) << "Array size mismatch";
+    for (size_t i = 0; i < a.size(); ++i) {
+        EXPECT_NEAR(a[i].i, b[i].i, tolerance)
+            << "Mismatch at index " << i << " (I component)";
+        EXPECT_NEAR(a[i].q, b[i].q, tolerance)
+            << "Mismatch at index " << i << " (Q component)";
+    }
+}
+
 TEST(RNG, FirstSamples) {
     const size_t num_samples = 10;
     vector<iq_sample_t> samples(num_samples);
@@ -46,13 +67,7 @@ TEST(RNG, FirstSamples) {
     rng_state_t state;
     dsp_rng_init(&state, 7500, 0x7fff, false, 1, 0);
     dsp_rng_generate_icdf(&state, samples.data(), num_samples);
-
-    for (size_t i = 0; i < num_samples; ++i) {
-        EXPECT_EQ(samples[i].i, kReferenceValues[i].i)
-            << "Mismatch at index " << i << " (I component)";
-        EXPECT_EQ(samples[i].q, kReferenceValues[i].q)
-            << "Mismatch at index " << i << " (Q component)";
-    }
+    CheckArray(samples, kReferenceValuesRNG, 0);
 }
 
 TEST(ZCGenerator, FullSequence) {
@@ -68,11 +83,20 @@ TEST(ZCGenerator, FullSequence) {
     dsp_zc_generator_process(&zc, samples.data(), num_samples);
 
     vector<iq_sample_t> reference = LoadTestData("zc.tsv");
-    EXPECT_EQ(samples.size(), reference.size());
-    for (size_t i = 0; i < num_samples; ++i) {
-        EXPECT_EQ(int(samples[i].i), reference[i].i)
-            << "Mismatch at index " << i << " (I component)";
-        EXPECT_EQ(int(samples[i].q), reference[i].q)
-            << "Mismatch at index " << i << " (Q component)";
-    }
+    CheckArray(samples, reference, 1);
+}
+
+TEST(RRCFilter, SimpleTest) {
+    sample_t lut_rrc[LUT_RRC_SIZE];
+    rrc_filter_state_t rrc_state;
+    dsp_rrc_filter_init(&rrc_state, &lut_rrc[0], 0.3f, 1, 2);
+    vector<iq_sample_t> symbols = {{0, 16384}, {0, 0}, {8192, 0}, {0, 0},
+                                   {-8192, 0}, {0, 0}, {0, 0},    {0, 0},
+                                   {0, 0},     {0, 0}, {0, 0},    {0, 0},
+                                   {0, 0},     {0, 0}, {0, 0},    {0, 0}};
+    vector<iq_sample_t> samples(32);
+    size_t consumed = dsp_rrc_filter_process(&rrc_state, symbols.data(),
+                                             samples.data(), samples.size());
+    EXPECT_EQ(consumed, 16) << "Wrong number of consumed samples";
+    CheckArray(samples, kReferenceValuesRRC, 1);
 }
